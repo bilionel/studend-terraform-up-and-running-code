@@ -73,6 +73,7 @@ resource "aws_security_group" "elb" {
 }
 
 resource "aws_autoscaling_group" "example" {
+  name = "${var.cluster_name}-${aws_launch_configuration.example.name}"
   launch_configuration = "${aws_launch_configuration.example.id}"
   availability_zones = data.aws_availability_zones.all.names
 
@@ -81,11 +82,16 @@ resource "aws_autoscaling_group" "example" {
 
   min_size = var.min_size
   max_size = var.max_size
+  min_elb_capacity = var.min_size
 
   tag {
     key = "Name"
     value = "${var.cluster_name}-example"
     propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 
 }
@@ -108,5 +114,9 @@ resource "aws_elb" "example" {
     timeout = 3
     interval = 30
     target = "HTTP:${var.server_port}/"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
